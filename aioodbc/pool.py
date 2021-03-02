@@ -25,7 +25,7 @@ async def _create_pool(minsize=10, maxsize=10, echo=False, loop=None,
     pool = Pool(minsize=minsize, maxsize=maxsize, echo=echo, loop=loop,
                 pool_recycle=pool_recycle, **kwargs)
     if minsize > 0:
-        with (await pool._cond):
+        async with pool._cond:
             await pool._fill_free_pool(False)
     return pool
 
@@ -105,7 +105,7 @@ class Pool(asyncio.AbstractServer):
             conn = self._free.popleft()
             await conn.close()
 
-        with (await self._cond):
+        async with self._cond:
             while self.size > self.freesize:
                 await self._cond.wait()
 
